@@ -145,6 +145,37 @@ build_git_dependency()
   make install || make
 }
 
+#build python dependency
+#-----------------------
+#
+#Get a python package from pip and install it as user
+#Note: pip should have been given as an apt-dependency beforehand
+#In linux : python pip
+#In osx : python
+build_python_dependency()
+{
+  pip install "$1" --user
+}
+
+# build_python_git_dependency
+# --------------------
+#
+# Build a python dependency directly from the Git development tree.
+# First argument: repository's GitHub URL or repository's URI + optional branch
+# For example: "scipy/scipy" or "scipy/scipy#maintenance/0.17.x"
+# Or: user@host:path/to/repo or git@github.com:organization/repo#branch
+build_python_git_dependency()
+{
+  git_dependency_parsing $1
+  echo "--> Compiling $git_dep (branch $git_dep_branch)"
+  cd "$build_dir"
+  mkdir -p "$git_dep"
+  $git_clone -b $git_dep_branch "$git_dep_uri" "$git_dep"
+  cd "$git_dep"
+  python setup.py install --user
+}
+
+
 _osx_install_dependencies()
 {
   # Install user-specified packages
@@ -172,6 +203,12 @@ install_dependencies()
   if [[ ${CI_OS_NAME} = osx ]]; then
     _osx_install_dependencies
   fi
+
+  #Install python dependencies via pip
+  for package in ${PYTHON_DEPENDENCIES}; do
+    build_python_dependency "$package"
+  done
+
   # and we build directly dependencies from the Git repository
   for package in ${ROS_GIT_DEPENDENCIES}; do
     catkin_git_dependency "$package"
@@ -179,6 +216,10 @@ install_dependencies()
   if `test "x${ROS_GIT_DEPENDENCIES}" != x`; then
     catkin_build_workspace
   fi
+
+  for package in ${PYTHON_GIT_DEPENDENCIES}; do
+    build_python_git_dependency "$package"
+  done
 
   for package in ${GIT_DEPENDENCIES}; do
     build_git_dependency "$package"
