@@ -145,18 +145,6 @@ build_git_dependency()
   make install || make
 }
 
-#build python dependency
-#-----------------------
-#
-#Get a python package from pip and install it as user
-#Note: pip should have been given as an apt-dependency beforehand
-#In linux : python pip
-#In osx : python
-build_python_dependency()
-{
-  pip install "$1" --user
-}
-
 # build_python_git_dependency
 # --------------------
 #
@@ -172,7 +160,7 @@ build_python_git_dependency()
   mkdir -p "$git_dep"
   $git_clone -b $git_dep_branch "$git_dep_uri" "$git_dep"
   cd "$git_dep"
-  python setup.py install --user
+  python setup.py install
 }
 
 
@@ -204,10 +192,9 @@ install_dependencies()
     _osx_install_dependencies
   fi
 
-  #Install python dependencies via pip
-  for package in ${PYTHON_DEPENDENCIES}; do
-    build_python_dependency "$package"
-  done
+  if [[ -f requirements.txt ]]; then
+    pip install -r requirements.txt
+  fi
 
   # and we build directly dependencies from the Git repository
   for package in ${ROS_GIT_DEPENDENCIES}; do
