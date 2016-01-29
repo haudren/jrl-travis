@@ -1,4 +1,4 @@
 #!/bin/bash
 
 virtualenv --python=python"$1" "virtualenv_$CI_BUILD_ID"
-source "virtual_env_$CI_BUILD_ID"/bin/activate
+. "virtual_env_$CI_BUILD_ID"/bin/activate
